@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // Pages.
 import 'package:event_ticketing_system/pages/homepage.dart';
 import 'package:event_ticketing_system/pages/explorepage.dart';
+import 'package:event_ticketing_system/pages/ticketpage.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -13,9 +14,12 @@ class App extends StatefulWidget {
 class AppState extends State<App> {
   int selectedPageIndex = 0;
   final List<Widget> pages = [
-    HomePage(), ExplorePage(), const Center(child: Text("Profile Page")) 
+    HomePage(),
+    ExplorePage(),
+    TicketsPage(),
+    const Center(child: Text("Profile Page")),
   ];
-  final List<String> pageTitle = ["Home", "Explore", "Profile"];
+  final List<String> pageTitle = ["Home", "Explore", "Tickets", "Profile"];
   Icon pageIcon(int index) {
     switch (index) {
       case 0:
@@ -23,13 +27,15 @@ class AppState extends State<App> {
       case 1:
         return const Icon(Icons.search);
       case 2:
+        return const Icon(Icons.confirmation_number);
+      case 3:
         return const Icon(Icons.person);
       default:
         return const Icon(Icons.pages);
     }
   }
 
-  void seletedPage(int index){
+  void seletedPage(int index) {
     setState(() {
       selectedPageIndex = index;
     });
