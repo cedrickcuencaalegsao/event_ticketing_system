@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart'; // <-- Import the scanner package
+import 'package:qr_flutter/qr_flutter.dart';       // <-- Import the QR display package
+
 // Pages.
 import 'package:event_ticketing_system/pages/homepage.dart';
 import 'package:event_ticketing_system/pages/explorepage.dart';
@@ -13,7 +16,6 @@ class App extends StatefulWidget {
 }
 
 class AppState extends State<App> {
-  // selectedPageIndex now correctly refers to the index in the `pages` list.
   int selectedPageIndex = 0;
   final List<Widget> pages = [
     const HomePage(),
@@ -21,42 +23,97 @@ class AppState extends State<App> {
     const TicketsPage(),
     const ProfilePage(),
   ];
-  final List<String> pageTitle = ["Home", "Explore", "Tickets", "Profile"];
 
-  Icon pageIcon(int index) {
-    switch (index) {
-      case 0:
-        return const Icon(Icons.home);
-      case 1:
-        return const Icon(Icons.search);
-      case 2:
-        return const Icon(Icons.confirmation_number);
-      case 3:
-        return const Icon(Icons.person);
-      default:
-        return const Icon(Icons.pages);
-    }
+  final MobileScannerController cameraController = MobileScannerController();
+  bool _isScanCompleted = false;
+
+  @override
+  void dispose() {
+    cameraController.dispose();
+    super.dispose();
   }
 
-  // MODIFIED: This function now correctly handles the placeholder at index 2.
   void selectedPage(int index) {
-    // If the middle placeholder (index 2) is tapped, do nothing.
-    if (index == 2) {
-      return;
-    }
-
+    if (index == 2) return;
     setState(() {
-      // If an index greater than the placeholder is tapped,
-      // we subtract 1 to get the correct index for the `pages` list.
-      if (index > 2) {
-        selectedPageIndex = index - 1;
-      } else {
-        selectedPageIndex = index;
-      }
+      selectedPageIndex = (index > 2) ? index - 1 : index;
     });
   }
 
+  void _showScanResult(String code) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.6,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 80,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Scan Successful!',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Ticket ID:',
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              ),
+              Text(
+                code,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 30),
+              QrImageView(
+                data: code,
+                version: QrVersions.auto,
+                size: 180.0,
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Close'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void openQRScanner() {
+    _isScanCompleted = false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -89,13 +146,7 @@ class AppState extends State<App> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Scan QR Code',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      const Text('Scan QR Code', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                       IconButton(
                         icon: const Icon(Icons.close),
                         onPressed: () => Navigator.pop(context),
@@ -107,129 +158,46 @@ class AppState extends State<App> {
             ),
             Expanded(
               child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  Container(
-                    color: Colors.black87,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 250,
-                            height: 250,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 3,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Stack(
-                              children: [
-                                // Corner decorations
-                                Positioned(
-                                  top: 0,
-                                  left: 0,
-                                  child: Container(
-                                    width: 30,
-                                    height: 30,
-                                    decoration: const BoxDecoration(
-                                      border: Border(
-                                        top: BorderSide(
-                                            color: Colors.deepPurple, width: 4),
-                                        left: BorderSide(
-                                            color: Colors.deepPurple, width: 4),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: Container(
-                                    width: 30,
-                                    height: 30,
-                                    decoration: const BoxDecoration(
-                                      border: Border(
-                                        top: BorderSide(
-                                            color: Colors.deepPurple, width: 4),
-                                        right: BorderSide(
-                                            color: Colors.deepPurple, width: 4),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  left: 0,
-                                  child: Container(
-                                    width: 30,
-                                    height: 30,
-                                    decoration: const BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                            color: Colors.deepPurple, width: 4),
-                                        left: BorderSide(
-                                            color: Colors.deepPurple, width: 4),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: Container(
-                                    width: 30,
-                                    height: 30,
-                                    decoration: const BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                            color: Colors.deepPurple, width: 4),
-                                        right: BorderSide(
-                                            color: Colors.deepPurple, width: 4),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Scanning line animation placeholder
-                                Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.qr_code_scanner,
-                                        size: 80,
-                                        // REPLACED: .withOpacity() with Color.fromRGBO()
-                                        color: const Color.fromRGBO(
-                                            255, 255, 255, 0.5),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Position QR code here',
-                                        style: TextStyle(
-                                          // REPLACED: .withOpacity() with Color.fromRGBO()
-                                          color: const Color.fromRGBO(
-                                              255, 255, 255, 0.7),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 30),
-                          const Text(
-                            'Align the QR code within the frame',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
+                  MobileScanner(
+                    controller: cameraController,
+                    onDetect: (capture) {
+                      if (!_isScanCompleted) {
+                        setState(() {
+                          _isScanCompleted = true;
+                        });
+                        final String code = capture.barcodes.first.rawValue ?? '---';
+                        Navigator.pop(context);
+                        _showScanResult(code);
+                      }
+                    },
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 250,
+                        height: 250,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white, width: 3),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned(top: 0, left: 0, child: _buildCorner(true, true)),
+                            Positioned(top: 0, right: 0, child: _buildCorner(true, false)),
+                            Positioned(bottom: 0, left: 0, child: _buildCorner(false, true)),
+                            Positioned(bottom: 0, right: 0, child: _buildCorner(false, false)),
+                          ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        'Align the QR code within the frame',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ],
                   ),
                   Positioned(
                     bottom: 30,
@@ -238,31 +206,41 @@ class AppState extends State<App> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            // REPLACED: .withOpacity() with Color.fromRGBO()
-                            color: const Color.fromRGBO(255, 255, 255, 0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.flash_off,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                        // --- START OF FIX ---
+                        ValueListenableBuilder(
+                          // 1. Listen to the controller directly
+                          valueListenable: cameraController,
+                          builder: (context, state, child) {
+                            return GestureDetector(
+                              onTap: () => cameraController.toggleTorch(),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: const BoxDecoration(
+                                  color: Color.fromRGBO(255, 255, 255, 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  // 2. Check the 'torchEnabled' boolean property
+                                  cameraController.torchEnabled ? Icons.flash_on : Icons.flash_off,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                            );
+                          },
                         ),
+                        // --- END OF FIX ---
                         const SizedBox(width: 40),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            // REPLACED: .withOpacity() with Color.fromRGBO()
-                            color: const Color.fromRGBO(255, 255, 255, 0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.image,
-                            color: Colors.white,
-                            size: 28,
+                        GestureDetector(
+                          onTap: () {
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: const BoxDecoration(
+                              color: Color.fromRGBO(255, 255, 255, 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.image, color: Colors.white, size: 28),
                           ),
                         ),
                       ],
@@ -277,6 +255,21 @@ class AppState extends State<App> {
     );
   }
 
+  Widget _buildCorner(bool isTop, bool isLeft) {
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        border: Border(
+          top: isTop ? const BorderSide(color: Colors.deepPurple, width: 4) : BorderSide.none,
+          bottom: !isTop ? const BorderSide(color: Colors.deepPurple, width: 4) : BorderSide.none,
+          left: isLeft ? const BorderSide(color: Colors.deepPurple, width: 4) : BorderSide.none,
+          right: !isLeft ? const BorderSide(color: Colors.deepPurple, width: 4) : BorderSide.none,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -286,36 +279,16 @@ class AppState extends State<App> {
         children: [
           BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
-            // MODIFIED: The currentIndex is now calculated to account for the placeholder.
-            // If the selected page index is 2 or 3 (Tickets, Profile), we add 1
-            // to get the correct BottomNavigationBarItem index (3, 4).
-            currentIndex:
-                selectedPageIndex >= 2 ? selectedPageIndex + 1 : selectedPageIndex,
+            currentIndex: selectedPageIndex >= 2 ? selectedPageIndex + 1 : selectedPageIndex,
             selectedItemColor: Colors.deepPurple,
             unselectedItemColor: Colors.grey,
             onTap: selectedPage,
             items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.search),
-                label: 'Explore',
-              ),
-              // This is the placeholder for the floating action button.
-              BottomNavigationBarItem(
-                icon: SizedBox(width: 24),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.confirmation_number),
-                label: 'Tickets',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person),
-                label: 'Profile',
-              ),
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+              BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Explore'),
+              BottomNavigationBarItem(icon: SizedBox(width: 24), label: ''),
+              BottomNavigationBarItem(icon: Icon(Icons.confirmation_number), label: 'Tickets'),
+              BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
             ],
           ),
           Positioned(
@@ -335,8 +308,6 @@ class AppState extends State<App> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      // REPLACED: .withOpacity() with Color.fromRGBO()
-                      // Colors.deepPurple is RGB(103, 58, 183)
                       color: const Color.fromRGBO(103, 58, 183, 0.4),
                       spreadRadius: 2,
                       blurRadius: 10,
@@ -344,11 +315,7 @@ class AppState extends State<App> {
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.qr_code_scanner,
-                  color: Colors.white,
-                  size: 32,
-                ),
+                child: const Icon(Icons.qr_code_scanner, color: Colors.white, size: 32),
               ),
             ),
           ),
