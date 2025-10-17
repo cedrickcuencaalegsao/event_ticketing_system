@@ -1,4 +1,6 @@
-import 'dart:convert';
+import 'package:event_ticketing_system/models/ticketmode.dart';
+import 'package:event_ticketing_system/models/favoritesmodel.dart';
+import 'package:event_ticketing_system/models/notificationmodel.dart';
 
 class User {
   final int id;
@@ -38,65 +40,5 @@ class User {
   }
 }
 
-class Ticket {
-  final int id;
-  final int eventId;
-  final String ticketNumber;
-  final String seats;
-  final String status;
 
-  Ticket({
-    required this.id,
-    required this.eventId,
-    required this.ticketNumber,
-    required this.seats,
-    required this.status,
-  });
 
-  factory Ticket.fromJson(Map<String, dynamic> json) {
-    return Ticket(
-      id: json['id'],
-      eventId: json['eventId'],
-      ticketNumber: json['ticketNumber'],
-      seats: json['seats'],
-      status: json['status'],
-    );
-  }
-}
-
-class Favorite {
-  final int id;
-  final int eventId;
-
-  Favorite({required this.id, required this.eventId});
-
-  factory Favorite.fromJson(Map<String, dynamic> json) {
-    return Favorite(
-      id: json['id'],
-      eventId: json['eventId'],
-    );
-  }
-}
-
-class Notification {
-  final int id;
-  final String title;
-  final String message;
-  final bool isRead;
-
-  Notification({
-    required this.id,
-    required this.title,
-    required this.message,
-    required this.isRead,
-  });
-
-  factory Notification.fromJson(Map<String, dynamic> json) {
-    return Notification(
-      id: json['id'],
-      title: json['title'],
-      message: json['message'],
-      isRead: json['isRead'],
-    );
-  }
-}
